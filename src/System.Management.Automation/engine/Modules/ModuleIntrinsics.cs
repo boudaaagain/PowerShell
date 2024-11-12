@@ -1272,10 +1272,20 @@ namespace System.Management.Automation
 
         private static string UpdatePath(string path, string pathToAdd, ref int insertIndex)
         {
-            if (!string.IsNullOrEmpty(pathToAdd))
+            if (string.IsNullOrEmpty(pathToAdd))
             {
-                path = AddToPath(path, pathToAdd, insertIndex);
-                insertIndex = path.IndexOf(Path.PathSeparator, PathContainsSubstring(path, pathToAdd));
+                return path;
+            }
+
+            foreach (string entry in pathToAdd.Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrEmpty(entry))
+                {
+                    continue;
+                }
+
+                path = AddToPath(path, entry, insertIndex);
+                insertIndex = path.IndexOf(Path.PathSeparator, PathContainsSubstring(path, entry));
                 if (insertIndex != -1)
                 {
                     // advance past the path separator

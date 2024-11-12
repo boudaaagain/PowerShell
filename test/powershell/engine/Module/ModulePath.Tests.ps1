@@ -3,6 +3,8 @@
 Describe "SxS Module Path Basic Tests" -tags "CI" {
 
     BeforeAll {
+        $pathSeparator = [System.IO.Path]::PathSeparator
+
         if ($IsWindows)
         {
             $powershell = "$PSHOME\pwsh.exe"
@@ -200,6 +202,59 @@ Describe "SxS Module Path Basic Tests" -tags "CI" {
         $env:PSModulePath = $env:PSModulePath.Replace($expectedUserPath, $newUserPath).Replace($expectedSharedPath,"")
         $out = & $powershell -noprofile -command '$env:PSModulePath'
         $out.Split([System.IO.Path]::PathSeparator, [System.StringSplitOptions]::RemoveEmptyEntries) | Should -Not -BeLike $validation
+    }
+
+    It 'User PSModulePath config [<Value>] with env var [<EnvVar>]' -TestCases @(
+        @{
+            Value = ''
+            EnvVar = $null
+            Expected = "${expectedUserPath}${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}" }
+        @{
+            Value = ''
+            EnvVar = "foo"
+            Expected = "${expectedUserPath}${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}${pathSeparator}foo"
+        }
+        @{
+            Value = $pathSeparator
+            EnvVar = $null
+            # This is probably wrong but is the current behaviour
+            Expected = "${pathSeparator}${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}" }
+        @{
+            Value = $pathSeparator
+            EnvVar = "foo"
+            Expected = "${expectedSharedPath}${pathSeparator}${expectedSystemPath}${pathSeparator}foo"
+        }
+        @{
+            Value = "test${pathSeparator}123"
+            EnvVar = $null
+            Expected = "test${pathSeparator}123${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}"
+        }
+        @{
+            Value = "test${pathSeparator}123"
+            EnvVar = "foo"
+            Expected = "test${pathSeparator}123${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}${pathSeparator}foo"
+        }
+        @{
+            Value = "test${pathSeparator}${pathSeparator}test${pathSeparator}123${pathSeparator}"
+            EnvVar = $null
+            Expected = "test${pathSeparator}${pathSeparator}test${pathSeparator}123${pathSeparator}${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}"
+        }
+        @{
+            Value = "test${pathSeparator}${pathSeparator}test${pathSeparator}123${pathSeparator}"
+            EnvVar = "foo"
+            Expected = "test${pathSeparator}123${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}${pathSeparator}foo"
+        }
+    ) {
+        param ($Value, $EnvVar, $Expected)
+
+        $env:PSModulePath = $EnvVar
+        $userConfig = @{
+            PSModulePath = $Value
+        } | ConvertTo-Json
+        Set-Content -Path $userConfigPath -Value $userConfig -Force
+        $out = & $powershell -noprofile -command '$env:PSModulePath'
+
+        $out | Should -Be $expected
     }
 }
 
