@@ -217,8 +217,7 @@ Describe "SxS Module Path Basic Tests" -tags "CI" {
         @{
             Value = $pathSeparator
             EnvVar = $null
-            # This is probably wrong but is the current behaviour
-            Expected = "${pathSeparator}${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}" }
+            Expected = "${expectedSharedPath}${pathSeparator}${expectedSystemPath}" }
         @{
             Value = $pathSeparator
             EnvVar = "foo"
@@ -237,7 +236,7 @@ Describe "SxS Module Path Basic Tests" -tags "CI" {
         @{
             Value = "test${pathSeparator}${pathSeparator}test${pathSeparator}123${pathSeparator}"
             EnvVar = $null
-            Expected = "test${pathSeparator}${pathSeparator}test${pathSeparator}123${pathSeparator}${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}"
+            Expected = "test${pathSeparator}123${pathSeparator}${expectedSharedPath}${pathSeparator}${expectedSystemPath}"
         }
         @{
             Value = "test${pathSeparator}${pathSeparator}test${pathSeparator}123${pathSeparator}"
